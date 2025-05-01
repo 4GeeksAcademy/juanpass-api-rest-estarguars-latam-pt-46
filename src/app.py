@@ -8,8 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
-#from models import Person
+from models import db, User, Character, Planet, Favorite
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -36,16 +35,23 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
+# Test endpoint
 @app.route('/user', methods=['GET'])
 def handle_hello():
+    return jsonify({"msg": "Hello, this is your GET /user response"}), 200
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+# ----------------- STARWARS API -----------------
 
-    return jsonify(response_body), 200
+# GET all characters
+@app.route('/people', methods=['GET'])
+def get_all_characters():
+    characters = Character.query.all()
+    return jsonify([char.serialize() for char in characters]), 200
 
-# this only runs if `$ python src/app.py` is executed
-if __name__ == '__main__':
-    PORT = int(os.environ.get('PORT', 3000))
-    app.run(host='0.0.0.0', port=PORT, debug=False)
+# GET character by ID
+@app.route('/people/<int:people_id>', methods=['GET'])
+def get_character_by_id(people_id):
+    character = Character.query.get(people_id)
+    if character:
+        return jsonify(character.serialize()), 200
+    return jsonify({"error": "Character not found"}),
